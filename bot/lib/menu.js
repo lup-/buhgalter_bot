@@ -5,13 +5,21 @@ function getMarkupButtons(buttons, columns = false) {
         columns = 1;
     }
 
-    let markupButtons = buttons.map(button => {
+    let getMarkupButton = button => {
         if (button.url) {
             return Markup.button.url(button.text, button.url);
         }
         else {
             return Markup.button.callback(button.text, button.code);
         }
+    }
+
+    let markupButtons = buttons.map(button => {
+        if (button instanceof Array) {
+            return button.map(getMarkupButton)
+        }
+
+        return getMarkupButton(button);
     });
 
     let columnButtons = [];

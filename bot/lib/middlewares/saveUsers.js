@@ -6,21 +6,23 @@ function isStartCommand(ctx) {
 
 module.exports = function () {
     return async (ctx, next) => {
-
-        if (!isStartCommand(ctx)) {
-            return next();
-        }
-
-        let message = ctx.update.message;
-        let {from, chat} = message;
+        let from = ctx.from;
+        let chat = ctx.chat;
         let id = from.id || chat.id || false;
         let botId = ctx.botInfo.id;
+        const users = ctx.db.collection('users');
 
         if (!id) {
             return next();
         }
 
-        const users = ctx.db.collection('users');
+        if (!isStartCommand(ctx)) {
+            let user = await users.findOne({id, botId});
+            ctx.dbUser = user;
+            return next();
+        }
+
+        ctx.dbUser = null;
 
         try {
             let user = await users.findOne({id, botId});
@@ -38,6 +40,7 @@ module.exports = function () {
             }
 
             await users.findOneAndReplace({id, botId}, user, {upsert: true, returnOriginal: false});
+            ctx.dbUser = user;
         }
         finally {
         }
