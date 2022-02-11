@@ -6,12 +6,25 @@ module.exports = function () {
     const scene = new BaseScene('admin');
 
     scene.enter(async ctx => {
-        return ctx.reply('Управление ботом', menu([
-            {code: 'clients', text: 'Новые пользователи'},
-            {code: 'infos', text: 'Сообщения об оплате'},
-            {code: 'requests', text: 'Запросы оплаты'},
-            {code: 'stat', text: 'Экспорт статистики'},
-        ], 1));
+        let hasAdminRoles = ctx.dbUser && ctx.dbUser.adminRoles;
+        if (!hasAdminRoles) {
+            return ctx.scene.enter('menu');
+        }
+
+        let buttons = [];
+        if (ctx.dbUser.adminRoles.includes('users')) {
+            buttons.push({code: 'clients', text: 'Новые пользователи'});
+        }
+
+        if (ctx.dbUser.adminRoles.includes('payments')) {
+            buttons = buttons.concat([
+                {code: 'infos', text: 'Сообщения об оплате'},
+                {code: 'requests', text: 'Запросы оплаты'},
+                {code: 'stat', text: 'Экспорт статистики'},
+            ]);
+        }
+
+        return ctx.reply('Управление ботом', menu(buttons, 1));
     });
 
     scene.action('clients', ctx => ctx.scene.enter('adminClients'));
